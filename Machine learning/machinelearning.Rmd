@@ -1,0 +1,155 @@
+---
+title: "machinelearning"
+author: "JS"
+date: "Sunday, January 25, 2015"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+
+
+```
+
+Load library caret, read training and test datasets
+
+```{r}
+
+library(caret)
+
+trainDataOrig <- read.csv("C:\\coursera\\pml-training.csv", na.strings = "")
+testData <- read.csv("C:\\coursera\\pml-testing.csv", na.strings = "")
+
+
+```
+Remove NA columns
+
+```{r}
+
+
+completeData <- subset(trainDataOrig, select = c(-max_roll_belt, -max_picth_belt, -min_roll_belt, -min_pitch_belt))
+completeData <- subset(completeData, select = c(-var_accel_arm ,-avg_roll_arm ,-stddev_roll_arm ,-var_roll_arm ,-avg_pitch_arm))
+completeData <- subset(completeData, select = c(-stddev_pitch_arm ,-var_pitch_arm ,-avg_yaw_arm,- stddev_yaw_arm ,-var_yaw_arm,-max_roll_arm,-max_picth_arm))
+completeData <- subset(completeData, select = c( -max_yaw_arm ,-min_roll_arm,- min_pitch_arm,- min_yaw_arm ,-amplitude_roll_arm ,- amplitude_pitch_arm ,-amplitude_yaw_arm)) 
+completeData <- subset(completeData, select = c( -max_roll_dumbbell,- max_picth_dumbbell,- min_roll_dumbbell ,-min_pitch_dumbbell))
+completeData <- subset(completeData, select = c( -amplitude_roll_dumbbell,- amplitude_pitch_dumbbell ,-total_accel_dumbbell,- var_accel_dumbbell,- avg_roll_dumbbell,- stddev_roll_dumbbell))
+completeData <- subset(completeData, select = c(-var_roll_dumbbell,-avg_pitch_dumbbell,-stddev_pitch_dumbbell ,-var_pitch_dumbbell,- avg_yaw_dumbbell,- stddev_yaw_dumbbell,- var_yaw_dumbbell))
+completeData <- subset(completeData, select = c(-max_roll_forearm,- max_picth_forearm,-avg_roll_forearm,- stddev_roll_forearm ,-var_roll_forearm ,-avg_pitch_forearm))
+completeData <- subset(completeData, select = c(-stddev_pitch_forearm ,-var_pitch_forearm ,-avg_yaw_forearm, -stddev_yaw_forearm,-var_yaw_forearm))
+completeData <- subset(completeData, select = c(-amplitude_roll_belt, -amplitude_pitch_belt, -var_total_accel_belt))
+completeData <- subset(completeData, select = c(-avg_roll_belt, -stddev_roll_belt,-var_roll_belt, -avg_pitch_belt, -stddev_pitch_belt, -var_pitch_belt, -avg_yaw_belt, -stddev_yaw_belt))
+completeData <- subset(completeData, select = c(-amplitude_roll_forearm, -amplitude_pitch_forearm, -var_yaw_belt))
+completeData <- completeData[, colSums(is.na(completeData)) < 15000]
+completeData <- subset(completeData, select = c(-user_name, -raw_timestamp_part_1, -raw_timestamp_part_2, -cvtd_timestamp))
+completeData <- subset(completeData, select = c(-min_roll_forearm, -min_pitch_forearm, -total_accel_forearm, -var_accel_forearm, -X, -new_window))
+
+```
+Partition original data to create training and cross-validation sets
+
+```{r}
+
+inTrain <- createDataPartition(completeData$classe, times = 1,p = 0.75, list = FALSE)
+trainData <- completeData[inTrain,]
+validationData <- completeData[-inTrain,]
+
+
+
+```
+
+Used LDA method to create a prediction model
+
+
+```{r}
+modelfit <- train(classe ~., data = trainData, method = "lda")
+
+predictionValidation <- predict(modelfit, newdata = validationData)
+
+validationData$predicteddata <- predictionValidation
+```
+Calculate the prediction error with validation set
+```{r}
+
+predictionerror <- (validationData$predicteddata == validationData$classe)
+predictionerror <- (validationData$predicteddata == validationData$classe)
+print(sum(predictionerror==FALSE)/nrow(validationData))
+
+
+
+
+```
+Apply prediction model to test data
+```{r}
+
+
+completetestData <- subset(testData, select = c(-max_roll_belt, -max_picth_belt, -min_roll_belt, -min_pitch_belt))
+completetestData <- subset(completetestData, select = c(-var_accel_arm ,-avg_roll_arm ,-stddev_roll_arm ,-var_roll_arm ,-avg_pitch_arm))
+completetestData <- subset(completetestData, select = c(-stddev_pitch_arm ,-var_pitch_arm ,-avg_yaw_arm,- stddev_yaw_arm ,-var_yaw_arm,-max_roll_arm,-max_picth_arm))
+completetestData <- subset(completetestData, select = c( -max_yaw_arm ,-min_roll_arm,- min_pitch_arm,- min_yaw_arm ,-amplitude_roll_arm ,- amplitude_pitch_arm ,-amplitude_yaw_arm)) 
+completetestData <- subset(completetestData, select = c( -max_roll_dumbbell,- max_picth_dumbbell,- min_roll_dumbbell ,-min_pitch_dumbbell))
+completetestData <- subset(completetestData, select = c( -amplitude_roll_dumbbell,- amplitude_pitch_dumbbell ,-total_accel_dumbbell,- var_accel_dumbbell,- avg_roll_dumbbell,- stddev_roll_dumbbell))
+completetestData <- subset(completetestData, select = c(-var_roll_dumbbell,-avg_pitch_dumbbell,-stddev_pitch_dumbbell ,-var_pitch_dumbbell,- avg_yaw_dumbbell,- stddev_yaw_dumbbell,- var_yaw_dumbbell))
+completetestData <- subset(completetestData, select = c(-max_roll_forearm,- max_picth_forearm,-avg_roll_forearm,- stddev_roll_forearm ,-var_roll_forearm ,-avg_pitch_forearm))
+completetestData <- subset(completetestData, select = c(-stddev_pitch_forearm ,-var_pitch_forearm ,-avg_yaw_forearm, -stddev_yaw_forearm,-var_yaw_forearm))
+completetestData <- subset(completetestData, select = c(-amplitude_roll_belt, -amplitude_pitch_belt, -var_total_accel_belt))
+completetestData <- subset(completetestData, select = c(-avg_roll_belt, -stddev_roll_belt,-var_roll_belt, -avg_pitch_belt, -stddev_pitch_belt, -var_pitch_belt, -avg_yaw_belt, -stddev_yaw_belt))
+completetestData <- subset(completetestData, select = c(-amplitude_roll_forearm, -amplitude_pitch_forearm, -var_yaw_belt))
+completetestData <- completetestData[, colSums(is.na(completetestData)) < 20]
+completetestData <- subset(completetestData, select = c(-user_name, -raw_timestamp_part_1, -raw_timestamp_part_2, -cvtd_timestamp))
+completetestData <- subset(completetestData, select = c(-min_roll_forearm, -min_pitch_forearm, -total_accel_forearm, -var_accel_forearm, -X, -new_window))
+
+
+```
+Print predictions
+
+```{r}
+
+
+
+predictions <- predict(modelfit, newdata = completetestData)
+predictions
+
+```
+
+
+```{r, echo=FALSE}
+
+
+
+
+```
+
+
+```{r, echo=FALSE}
+
+
+
+
+```
+
+
+```{r, echo=FALSE}
+
+
+
+
+```
+
+```{r, echo=FALSE}
+
+
+
+
+```
+
+
+```{r, echo=FALSE}
+
+
+
+
+```
+
